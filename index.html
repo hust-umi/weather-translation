@@ -136,6 +136,45 @@
             pointer-events: none;
         }
 
+        .video-download-progress {
+            width: 100%;
+            margin: 0 auto 13px;
+            padding: 10px 13px;
+            border: 1px solid rgba(83, 158, 204, 0.28);
+            border-radius: 8px;
+            background: rgba(239, 249, 255, 0.92);
+            color: var(--ink-soft);
+            font-family: 'Google Sans', sans-serif;
+            line-height: 1.3;
+        }
+
+        .video-download-row {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr) 74px;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .video-download-row + .video-download-row {
+            margin-top: 8px;
+        }
+
+        .video-download-row progress {
+            width: 100%;
+            height: 8px;
+            overflow: hidden;
+            border: 0;
+            border-radius: 999px;
+            accent-color: var(--sage-deep);
+        }
+
+        .video-download-status {
+            text-align: right;
+            white-space: nowrap;
+        }
+
         .video-comparison > video {
             display: block;
             width: 100%;
@@ -2082,6 +2121,7 @@
         (function initializeVideoComparisons() {
             var visibilityHandlers = new WeakMap();
             var preparationHandlers = new WeakMap();
+            var downloadProgressViews = new WeakMap();
             var comparisonObjectUrls = [];
             var visibilityObserver = 'IntersectionObserver' in window
                 ? new IntersectionObserver(function (entries) {
@@ -2148,13 +2188,112 @@
                 return hint;
             }
 
-            function fetchCompleteVideo(sourcePath) {
+            function formatDownloadSize(bytes) {
+                if (!Number.isFinite(bytes) || bytes <= 0) {
+                    return 'Waiting';
+                }
+                if (bytes >= 1024 * 1024) {
+                    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                }
+                return Math.ceil(bytes / 1024) + ' KB';
+            }
+
+            function createDownloadProgressView() {
+                var element = document.createElement('div');
+                element.className = 'video-download-progress';
+                element.setAttribute('aria-label', 'Video download progress');
+
+                var tracks = {};
+                ['video', 'edge'].forEach(function (kind) {
+                    var row = document.createElement('div');
+                    row.className = 'video-download-row';
+
+                    var label = document.createElement('span');
+                    label.textContent = kind === 'video' ? 'Video' : 'Edge';
+
+                    var progress = document.createElement('progress');
+                    progress.max = 100;
+                    progress.value = 0;
+                    progress.setAttribute('aria-label', label.textContent + ' downloading');
+
+                    var status = document.createElement('span');
+                    status.className = 'video-download-status';
+                    status.textContent = 'Waiting';
+
+                    row.append(label, progress, status);
+                    element.appendChild(row);
+                    tracks[kind] = { progress: progress, status: status };
+                });
+
+                return {
+                    element: element,
+                    update: function (kind, loaded, total) {
+                        var track = tracks[kind];
+                        if (!track) {
+                            return;
+                        }
+                        if (Number.isFinite(total) && total > 0) {
+                            var percent = Math.min(100, loaded / total * 100);
+                            track.progress.value = percent;
+                            track.status.textContent = Math.round(percent) + '%';
+                        } else {
+                            track.progress.removeAttribute('value');
+                            track.status.textContent = formatDownloadSize(loaded);
+                        }
+                    }
+                };
+            }
+
+            function removeDownloadProgress(video) {
+                var view = downloadProgressViews.get(video);
+                if (view) {
+                    view.element.remove();
+                    downloadProgressViews.delete(video);
+                }
+            }
+
+            function updateDownloadProgress(video, kind, loaded, total) {
+                var view = downloadProgressViews.get(video);
+                if (view) {
+                    view.update(kind, loaded, total);
+                }
+            }
+
+            function fetchCompleteVideo(sourcePath, onProgress) {
                 return fetch(sourcePath, { cache: 'force-cache' })
                     .then(function (response) {
                         if (!response.ok) {
                             throw new Error('Unable to download ' + sourcePath);
                         }
-                        return response.blob();
+                        var total = Number(response.headers.get('Content-Length')) || 0;
+                        var contentType = response.headers.get('Content-Type') || 'video/mp4';
+
+                        if (!response.body || !response.body.getReader) {
+                            return response.blob().then(function (blob) {
+                                onProgress(blob.size, total || blob.size);
+                                return blob;
+                            });
+                        }
+
+                        var reader = response.body.getReader();
+                        var chunks = [];
+                        var loaded = 0;
+
+                        function readNextChunk() {
+                            return reader.read().then(function (result) {
+                                if (result.done) {
+                                    onProgress(loaded, total || loaded);
+                                    return new Blob(chunks, { type: contentType });
+                                }
+                                chunks.push(result.value);
+                                loaded += result.value.byteLength;
+                                onProgress(loaded, total);
+                                return readNextChunk();
+                            });
+                        }
+
+                        onProgress(0, total);
+                        return readNextChunk();
                     });
             }
 
@@ -2328,6 +2467,7 @@
                     preparationObserver.unobserve(video);
                 }
                 preparationHandlers.delete(video);
+                removeDownloadProgress(video);
 
                 var placeholder = createEdgeMapHint(true);
                 var topLabelRow = video.previousElementSibling;
@@ -2384,6 +2524,10 @@
                     videoParent.insertBefore(bottomLabelRow, video.nextSibling);
                 }
 
+                var downloadProgressView = createDownloadProgressView();
+                videoParent.insertBefore(downloadProgressView.element, topLabelRow || video);
+                downloadProgressViews.set(video, downloadProgressView);
+
                 video.setAttribute('data-comparison-had-controls', String(video.hasAttribute('controls')));
                 video.setAttribute('aria-busy', 'true');
                 video.controls = false;
@@ -2406,6 +2550,7 @@
             }
 
             function prepareLocalComparison(video, sourcePath) {
+                removeDownloadProgress(video);
                 var baseVideo = createBufferedVideo(video, sourcePath, 'comparison-base-video');
                 var edgeVideo = createBufferedVideo(video, edgePath(sourcePath), 'comparison-edge-video');
 
@@ -2428,8 +2573,12 @@
                 var localObjectUrls = [];
 
                 Promise.all([
-                    fetchCompleteVideo(sourcePath),
-                    fetchCompleteVideo(edgePath(sourcePath))
+                    fetchCompleteVideo(sourcePath, function (loaded, total) {
+                        updateDownloadProgress(video, 'video', loaded, total);
+                    }),
+                    fetchCompleteVideo(edgePath(sourcePath), function (loaded, total) {
+                        updateDownloadProgress(video, 'edge', loaded, total);
+                    })
                 ]).then(function (blobs) {
                     var baseObjectUrl = URL.createObjectURL(blobs[0]);
                     var edgeObjectUrl = URL.createObjectURL(blobs[1]);
@@ -2447,6 +2596,7 @@
                         }
                         comparisonObjectUrls.push(baseObjectUrl, edgeObjectUrl);
                         localObjectUrls.length = 0;
+                        removeDownloadProgress(video);
                         initializeComparison(video, baseVideo, edgeVideo, sourcePath);
                     });
                 }).catch(function (error) {
