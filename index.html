@@ -1,0 +1,2701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="RealWeather: realistic and scene-faithful weather translation with driving world models.">
+    <meta name="keywords" content="RealWeather, Realistic, Scene-Faithful, Weather Translation, Driving World Models">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#eef8ff">
+    <title>RealWeather</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./static/css/bulma.min.css">
+    <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="./static/css/twentytwenty.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <link rel="stylesheet" href="./static/css/index.css">
+
+    <script src="./static/js/jquery-3.2.1.min.js"></script>
+    <script src="./static/js/jquery.event.move.js"></script>
+    <script src="./static/js/jquery.twentytwenty.js"></script>
+    <script src="./static/js/bulma-carousel.min.js"></script>
+    <script src="./static/js/bulma-slider.min.js"></script>
+    <script src="./static/js/fontawesome.all.min.js"></script>
+
+    <style>
+        .section-title {
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .sub-section-label {
+            font-weight: 600;
+            color: #4FACFA;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .video-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+        .video-grid video {
+            max-width: 220px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .video-grid .video-item {
+            text-align: center;
+        }
+        .video-grid .video-item p {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            color: #666;
+        }
+        .carousel video {
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .results-section .carousel-cell > video,
+        .results-section .carousel > video {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: none;
+        }
+        .carousel-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .hero-body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .section-divider {
+            margin: 20px auto;
+            max-width: 80%;
+            border-color: #eee;
+        }
+
+        .video-comparison {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            isolation: isolate;
+            background: #000;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            line-height: 0;
+            user-select: none;
+        }
+
+        .edge-map-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            width: fit-content;
+            margin: 0 auto 10px;
+            padding: 8px 14px;
+            border: 1px solid rgba(36, 123, 160, 0.28);
+            border-radius: 7px;
+            background: linear-gradient(135deg, #eefaff 0%, #fff8e8 100%);
+            box-shadow: 0 3px 10px rgba(24, 78, 99, 0.12);
+            color: #173f50;
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.35;
+            text-align: center;
+        }
+
+        .edge-map-hint::before {
+            content: "Scene Fidelity";
+            flex: 0 0 auto;
+            padding: 3px 7px;
+            border-radius: 4px;
+            background: #247ba0;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .edge-map-hint.is-placeholder {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .video-comparison > video {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .video-comparison:fullscreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw !important;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        .video-comparison:fullscreen > video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-comparison:-webkit-full-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw !important;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        .video-comparison:-webkit-full-screen > video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-comparison .comparison-edge-video {
+            position: absolute;
+            inset: 0;
+            height: 100%;
+            object-fit: fill;
+            z-index: 2;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .comparison-divider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 24px;
+            transform: translateX(-50%);
+            z-index: 3;
+            cursor: col-resize;
+            touch-action: none;
+        }
+
+        .comparison-divider::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            transform: translateX(-50%);
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 0 10px rgba(0,0,0,0.45);
+        }
+
+        .comparison-divider::after {
+            content: "↔";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 28px;
+            height: 28px;
+            transform: translate(-50%, -50%);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 24px;
+            text-align: center;
+            text-shadow: 0 1px 2px #000;
+        }
+
+        .comparison-controls {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 38px;
+            padding: 7px 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.82));
+            opacity: 0;
+            transition: opacity 160ms ease;
+            line-height: 1;
+        }
+
+        .video-comparison:hover .comparison-controls,
+        .video-comparison:focus-within .comparison-controls {
+            opacity: 1;
+        }
+
+        .comparison-controls button {
+            flex: 0 0 auto;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 24px;
+        }
+
+        .comparison-controls button:focus-visible,
+        .comparison-controls input:focus-visible {
+            outline: 2px solid #4FACFA;
+            outline-offset: 2px;
+        }
+
+        .comparison-progress {
+            min-width: 0;
+            width: 100%;
+            accent-color: #4FACFA;
+            cursor: pointer;
+        }
+
+        .comparison-time {
+            flex: 0 0 auto;
+            min-width: 78px;
+            color: #fff;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        :root {
+            --paper: #eef8ff;
+            --paper-warm: #f7fbff;
+            --surface: rgba(252, 254, 255, 0.93);
+            --surface-solid: #fcfeff;
+            --ink: #173752;
+            --ink-soft: #557086;
+            --line: #d6e8f4;
+            --line-strong: #bdd9ea;
+            --sage: #72b7df;
+            --sage-deep: #2f82b8;
+            --sky: #8bc9eb;
+            --sky-pale: #e6f5fd;
+            --sand: #acd5ea;
+            --sand-pale: #eaf6fd;
+            --shadow-soft: 0 18px 50px rgba(43, 105, 146, 0.09);
+            --shadow-card: 0 8px 30px rgba(43, 105, 146, 0.08);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--paper);
+            font-size: 17px;
+        }
+
+        body {
+            position: relative;
+            padding-top: 58px;
+            overflow-x: hidden;
+            isolation: isolate;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 8% 7%, rgba(100, 184, 230, 0.2), transparent 27rem),
+                radial-gradient(circle at 92% 24%, rgba(151, 207, 237, 0.18), transparent 28rem),
+                linear-gradient(180deg, #f8fcff 0%, var(--paper) 46%, #eaf6fd 100%);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.34;
+            background-image: radial-gradient(rgba(47, 130, 184, 0.15) 0.6px, transparent 0.6px);
+            background-size: 18px 18px;
+            mask-image: linear-gradient(to bottom, #000, transparent 75%);
+        }
+
+        body > section,
+        body > .container,
+        body > .section-divider,
+        body > footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .weather-atmosphere {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .weather-rain,
+        .weather-snow {
+            position: absolute;
+            inset: -30% -10%;
+            will-change: background-position;
+        }
+
+        .weather-rain {
+            opacity: 0.3;
+            background-image:
+                linear-gradient(112deg, transparent 46%, rgba(67, 154, 208, 0.38) 48%, transparent 50%),
+                linear-gradient(112deg, transparent 47%, rgba(113, 190, 231, 0.28) 49%, transparent 51%);
+            background-size: 105px 155px, 165px 235px;
+            animation: weather-rain-fall 2.1s linear infinite;
+        }
+
+        .weather-snow {
+            opacity: 0.78;
+            background-image:
+                radial-gradient(circle, #fff 0 1.6px, rgba(108, 181, 224, 0.48) 1.8px, transparent 2.7px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.96) 0 2.2px, rgba(108, 181, 224, 0.34) 2.4px, transparent 3.3px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1.1px, rgba(108, 181, 224, 0.38) 1.3px, transparent 2px);
+            background-size: 145px 145px, 230px 230px, 95px 95px;
+            background-position: 12px -80px, 80px -170px, 42px -40px;
+            animation: weather-snow-fall 18s linear infinite;
+        }
+
+        @keyframes weather-rain-fall {
+            from {
+                background-position: 0 -310px, 55px -470px;
+            }
+            to {
+                background-position: -150px 310px, -105px 470px;
+            }
+        }
+
+        @keyframes weather-snow-fall {
+            from {
+                background-position: 12px -290px, 80px -460px, 42px -190px;
+            }
+            to {
+                background-position: 110px 580px, -70px 690px, 126px 475px;
+            }
+        }
+
+        ::selection {
+            background: #ccecff;
+            color: #174d70;
+        }
+
+        section,
+        #abstract {
+            scroll-margin-top: 78px;
+        }
+
+        a {
+            transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+        }
+
+        .paper-nav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 58px;
+            padding: 0 max(24px, calc((100vw - 1180px) / 2));
+            border-bottom: 1px solid rgba(189, 217, 234, 0.84);
+            background: rgba(246, 251, 255, 0.84);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
+        }
+
+        .paper-nav-brand {
+            flex: 0 0 auto;
+            color: var(--sage-deep);
+            font-family: 'Castoro', serif;
+            font-size: 1.08rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .paper-nav-links {
+            display: flex;
+            flex: 0 1 auto;
+            align-items: center;
+            gap: 28px;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            white-space: nowrap;
+        }
+
+        .paper-nav-links::-webkit-scrollbar {
+            display: none;
+        }
+
+        .paper-nav-links a {
+            position: relative;
+            color: var(--ink-soft);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .paper-nav-links a::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: -7px;
+            left: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: var(--sage);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 160ms ease;
+        }
+
+        .paper-nav-links a:hover {
+            color: var(--sage-deep);
+        }
+
+        .paper-nav-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .publication-hero {
+            position: relative;
+            overflow: hidden;
+            min-height: 650px;
+            border-bottom: 1px solid rgba(189, 217, 234, 0.76);
+            background:
+                radial-gradient(circle at 18% 18%, rgba(116, 192, 232, 0.3), transparent 24rem),
+                radial-gradient(circle at 80% 12%, rgba(174, 219, 242, 0.26), transparent 25rem),
+                radial-gradient(circle at 68% 90%, rgba(100, 177, 221, 0.2), transparent 28rem),
+                linear-gradient(145deg, #f9fdff 0%, #ebf7fe 52%, #f4fbff 100%);
+        }
+
+        .publication-hero::before,
+        .publication-hero::after {
+            content: "";
+            position: absolute;
+            border: 1px solid rgba(83, 158, 204, 0.22);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .publication-hero::before {
+            top: -250px;
+            right: -170px;
+            width: 620px;
+            height: 620px;
+        }
+
+        .publication-hero::after {
+            bottom: -320px;
+            left: -230px;
+            width: 700px;
+            height: 700px;
+        }
+
+        .publication-hero > .hero-body {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 82px 24px 74px;
+        }
+
+        .paper-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 7px 13px;
+            border: 1px solid rgba(83, 158, 204, 0.36);
+            border-radius: 999px;
+            background: rgba(255, 255, 253, 0.66);
+            color: var(--sage-deep);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+
+        .publication-title {
+            width: auto;
+            max-width: 1040px;
+            margin: 0 auto 30px;
+            color: var(--ink);
+            font-family: 'Google Sans', sans-serif;
+            letter-spacing: -0.04em;
+        }
+
+        .title-mark {
+            display: block;
+            color: #237fb7;
+            font-family: 'Sora', 'Google Sans', sans-serif;
+            font-size: clamp(3.4rem, 7vw, 6.7rem);
+            font-weight: 800;
+            line-height: 0.9;
+            letter-spacing: -0.075em;
+            text-shadow: none;
+        }
+
+        .title-subline {
+            display: block;
+            max-width: 1000px;
+            margin: 22px auto 0;
+            color: #23445e;
+            font-size: clamp(1.65rem, 3.35vw, 3rem);
+            font-weight: 650;
+            line-height: 1.12;
+            letter-spacing: -0.04em;
+        }
+
+        .title-emphasis {
+            position: relative;
+            z-index: 0;
+            display: inline-block;
+            padding: 0 0.05em;
+            font-family: 'Castoro', serif;
+            font-weight: 700;
+            letter-spacing: -0.045em;
+        }
+
+        .title-emphasis::after {
+            content: "";
+            position: absolute;
+            right: -0.04em;
+            bottom: 0.03em;
+            left: -0.04em;
+            z-index: -1;
+            height: 0.26em;
+            border-radius: 999px 45% 999px 40%;
+            opacity: 0.72;
+            transform: rotate(-1.5deg);
+        }
+
+        .title-realistic {
+            color: #247fb8;
+        }
+
+        .title-realistic::after {
+            background: linear-gradient(90deg, rgba(129, 205, 245, 0.18), rgba(87, 177, 226, 0.5));
+        }
+
+        .title-faithful {
+            color: #31805f;
+        }
+
+        .title-faithful::after {
+            background: linear-gradient(90deg, rgba(134, 215, 169, 0.22), rgba(89, 183, 130, 0.48));
+            transform: rotate(1.2deg);
+        }
+
+        .publication-authors {
+            max-width: 940px;
+            margin: 0 auto;
+            color: var(--ink-soft);
+            font-family: 'Google Sans', sans-serif;
+            line-height: 1.85;
+        }
+
+        .publication-authors .author-block {
+            margin: 0 5px;
+        }
+
+        .publication-authors a {
+            color: var(--sage-deep) !important;
+            font-weight: 600;
+            text-decoration-color: rgba(47, 130, 184, 0.28);
+            text-underline-offset: 3px;
+        }
+
+        .publication-authors a:hover {
+            color: #236f9f !important;
+            text-decoration-color: currentColor;
+        }
+
+        .publication-links {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .publication-links .button.is-dark {
+            min-width: 112px;
+            min-height: 44px;
+            border: 1px solid var(--sage-deep);
+            background: var(--sage-deep);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(47, 130, 184, 0.18);
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 650;
+        }
+
+        .publication-links .link-block:nth-child(2) .button {
+            border-color: var(--line-strong);
+            background: rgba(255, 255, 253, 0.78);
+            color: var(--sage-deep);
+            box-shadow: none;
+        }
+
+        .publication-links .button:hover {
+            transform: translateY(-2px);
+            border-color: #236f9f;
+            background: #236f9f;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(47, 130, 184, 0.22);
+        }
+
+        .tldr {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: min(94%, 940px);
+            max-width: none;
+            margin: 20px auto 0;
+            padding: 14px 18px;
+            border: 1px solid var(--line-strong);
+            border-radius: 12px;
+            background: rgba(255, 255, 253, 0.74);
+            box-shadow: 0 10px 28px rgba(43, 105, 146, 0.08);
+            color: var(--ink-soft);
+            font-size: 1.12rem;
+            line-height: 1.55;
+            text-align: left;
+        }
+
+        .tldr strong {
+            flex: 0 0 auto;
+            padding: 5px 9px;
+            border-radius: 6px;
+            background: var(--sand-pale);
+            color: #276c98;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+        }
+
+        .abstract-shell {
+            position: relative;
+            margin-top: 78px;
+            margin-bottom: 34px;
+            padding: 60px 46px 54px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--surface);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .abstract-shell::before {
+            content: "“";
+            position: absolute;
+            top: -30px;
+            left: 26px;
+            color: rgba(72, 152, 201, 0.11);
+            font-family: 'Castoro', serif;
+            font-size: 12rem;
+            line-height: 1;
+        }
+
+        .abstract-shell > .columns {
+            margin: 0;
+        }
+
+        .abstract-shell .column {
+            position: relative;
+            z-index: 1;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .section-heading,
+        .section-title {
+            color: var(--ink);
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.035em;
+        }
+
+        .section-heading::before,
+        .section-title::before {
+            content: attr(data-kicker);
+            display: block;
+            margin-bottom: 9px;
+            color: var(--sage-deep);
+            font-size: 1.0rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .section-heading {
+            margin-bottom: 26px !important;
+            text-align: center;
+        }
+
+        .abstract-shell .content,
+        .method-section .content {
+            color: var(--ink-soft);
+            font-size: 1.14rem;
+            line-height: 1.9;
+        }
+
+        .abstract-shell .content b,
+        .abstract-shell .content i,
+        .method-section .content b,
+        .method-section .content i {
+            color: var(--ink);
+        }
+
+        .method-section {
+            max-width: 1180px;
+            margin: 34px auto 42px;
+            padding: 0 20px;
+            background: transparent;
+        }
+
+        .method-section > .hero-body {
+            display: block;
+            padding: 38px 0;
+        }
+
+        .method-section .columns {
+            margin: 0;
+        }
+
+        .method-section .column.is-three-fifths {
+            flex: none;
+            width: min(100%, 1040px);
+            margin: 0 auto !important;
+            padding: 58px 54px 46px;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--surface);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .method-section .content > .hero-body {
+            display: block;
+            margin: 26px 0 24px !important;
+            padding: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 15px !important;
+            background: #f3faff;
+        }
+
+        .method-section #overview {
+            display: block;
+            border-radius: 9px;
+        }
+
+        .method-section .content p {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .data-pipeline-block {
+            max-width: 960px;
+            margin: 46px auto 0;
+            padding-top: 38px;
+            border-top: 1px solid var(--line);
+        }
+
+        .data-pipeline-media {
+            padding: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: #f3faff;
+        }
+
+        .data-pipeline-media img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 9px;
+        }
+
+        .data-pipeline-block figcaption {
+            max-width: 900px;
+            margin: 18px auto 0;
+            color: var(--ink-soft);
+            font-size: 1.08rem;
+            line-height: 1.82;
+            text-align: justify;
+        }
+
+        .data-pipeline-block figcaption strong {
+            color: var(--ink);
+        }
+
+        .results-section {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 28px 22px;
+            background: transparent;
+        }
+
+        .results-section > .container {
+            padding: 64px clamp(28px, 5vw, 70px) 70px;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: var(--surface);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .results-section:nth-of-type(even) > .container {
+            background:
+                radial-gradient(circle at 100% 0%, rgba(134, 173, 195, 0.08), transparent 24rem),
+                var(--surface-solid);
+        }
+
+        .section-title {
+            position: relative;
+            max-width: 780px;
+            margin: 0 auto 22px;
+            padding-bottom: 22px;
+            border-bottom: 0;
+            font-size: clamp(1.85rem, 3.5vw, 2.65rem) !important;
+        }
+
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 72px;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--sky), var(--sage), var(--sand));
+            transform: translateX(-50%);
+        }
+
+        .section-title + .content {
+            max-width: 790px;
+            margin-right: auto !important;
+            margin-left: auto !important;
+            color: var(--ink-soft);
+            font-size: 1.12rem;
+            line-height: 1.82;
+        }
+
+        .sub-section-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            max-width: 100%;
+            margin: 46px auto 20px !important;
+            padding: 9px 15px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--sky-pale), #f2faff);
+            color: var(--sage-deep);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 1rem !important;
+            font-weight: 700;
+            line-height: 1.35;
+            box-shadow: 0 4px 12px rgba(43, 105, 146, 0.065);
+        }
+
+        .results-carousel,
+        .results-section .carousel {
+            padding: 20px 56px 38px;
+            overflow: hidden;
+            border: 1px solid #d9eaf5;
+            border-radius: 19px;
+            background:
+                linear-gradient(145deg, rgba(241, 249, 254, 0.97), rgba(248, 252, 255, 0.97));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .carousel-shell {
+            position: relative;
+            width: 100%;
+            padding: 20px 58px 38px;
+            overflow: hidden;
+            border: 1px solid #d9eaf5;
+            border-radius: 19px;
+            background:
+                linear-gradient(145deg, rgba(241, 249, 254, 0.97), rgba(248, 252, 255, 0.97));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .carousel-shell > .results-carousel {
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .carousel-cell {
+            padding: 14px 10px 32px;
+        }
+
+        .video-comparison {
+            width: 100% !important;
+            border: 1px solid rgba(205, 227, 240, 0.94);
+            border-radius: 13px;
+            box-shadow: 0 16px 38px rgba(31, 91, 130, 0.16);
+            transition: box-shadow 180ms ease;
+        }
+
+        .video-comparison:hover {
+            box-shadow: 0 20px 46px rgba(31, 91, 130, 0.2);
+        }
+
+        .edge-map-hint {
+            margin-bottom: 13px;
+            padding: 8px 13px;
+            border-color: rgba(83, 158, 204, 0.32);
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e9f7ff 0%, #f5fbff 100%);
+            box-shadow: none;
+            color: var(--ink-soft);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .edge-map-hint::before {
+            background: var(--sage-deep);
+            font-size: 0.75rem;
+        }
+
+        .subvideo-label-row {
+            --subvideo-columns: 2;
+            display: grid;
+            grid-template-columns: repeat(var(--subvideo-columns), minmax(0, 1fr));
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+            padding: 0 3px;
+            line-height: 1;
+        }
+
+        .subvideo-label-row.is-top {
+            margin-bottom: 10px;
+        }
+
+        .subvideo-label-row.is-bottom {
+            margin-top: 10px;
+        }
+
+        .subvideo-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            justify-self: center;
+            gap: 6px;
+            width: fit-content;
+            max-width: 100%;
+            min-height: 34px;
+            padding: 6px 11px;
+            border: 1px solid var(--line-strong);
+            border-radius: 7px;
+            background: rgba(255, 255, 253, 0.94);
+            box-shadow: 0 4px 12px rgba(43, 105, 146, 0.08);
+            color: var(--ink);
+            font-family: 'Google Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 650;
+            line-height: 1.25;
+            text-align: center;
+        }
+
+        .subvideo-tag:first-child {
+            justify-self: start;
+        }
+
+        .subvideo-tag:last-child {
+            justify-self: end;
+        }
+
+        .subvideo-tag::before {
+            content: attr(data-role);
+            flex: 0 0 auto;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: #dceffa;
+            color: var(--sage-deep);
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .subvideo-tag.is-input {
+            border-color: #afd3e8;
+            background: #f5fbff;
+        }
+
+        .subvideo-tag.is-input::before {
+            background: var(--sand-pale);
+            color: #276c98;
+        }
+
+        .subvideo-tag.is-generated {
+            border-color: #b8dec8;
+            background: #f2fbf6;
+            color: #285f43;
+        }
+
+        .subvideo-tag.is-generated::before {
+            background: #d9f2e3;
+            color: #26734b;
+        }
+
+        .slider-navigation-previous,
+        .slider-navigation-next {
+            top: 50%;
+            z-index: 3;
+            width: 42px;
+            height: 42px;
+            margin-top: -21px;
+            border: 1px solid var(--line-strong);
+            background: rgba(255, 255, 253, 0.94) !important;
+            color: var(--sage-deep);
+            box-shadow: 0 8px 20px rgba(43, 105, 146, 0.15);
+        }
+
+        .slider-navigation-previous {
+            left: 8px;
+        }
+
+        .slider-navigation-next {
+            right: 8px;
+            left: auto;
+        }
+
+        .slider-navigation-previous:hover,
+        .slider-navigation-next:hover {
+            border-color: var(--sage);
+            background: #fff !important;
+            color: #236f9f;
+        }
+
+        .slider-pagination {
+            top: calc(100% - 25px);
+        }
+
+        .slider-pagination .slider-page {
+            width: 7px;
+            height: 7px;
+            background: #bfdbea;
+            box-shadow: none;
+            opacity: 1;
+        }
+
+        .slider-pagination .slider-page.is-active {
+            background: var(--sage-deep);
+            transform: scale(1.28);
+        }
+
+        .section-divider {
+            display: none;
+        }
+
+        .paper-footer {
+            margin-top: 42px;
+            padding: 42px 24px;
+            border-top: 1px solid var(--line);
+            background:
+                radial-gradient(circle at 20% 0%, rgba(134, 173, 195, 0.12), transparent 22rem),
+                #e7f4fc;
+            color: var(--ink-soft);
+        }
+
+        .paper-footer .hero-body {
+            padding: 0;
+        }
+
+        .paper-footer .content {
+            font-size: 1rem;
+            line-height: 1.75;
+            text-align: center;
+        }
+
+        .paper-footer a {
+            color: var(--sage-deep);
+            font-weight: 600;
+        }
+
+        @keyframes paper-rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .paper-kicker,
+        .publication-title,
+        .publication-authors,
+        .publication-links,
+        .tldr {
+            animation: paper-rise 620ms both;
+        }
+
+        .publication-title {
+            animation-delay: 80ms;
+        }
+
+        .publication-authors {
+            animation-delay: 150ms;
+        }
+
+        .publication-links {
+            animation-delay: 220ms;
+        }
+
+        .tldr {
+            animation-delay: 290ms;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            .weather-atmosphere {
+                display: none;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .publication-hero {
+                min-height: auto;
+            }
+
+            .publication-hero > .hero-body {
+                padding: 66px 20px 58px;
+            }
+
+            .abstract-shell {
+                width: calc(100% - 32px);
+                padding: 48px 28px 44px;
+            }
+
+            .method-section .column.is-three-fifths {
+                padding: 46px 30px 38px;
+            }
+
+            .results-section {
+                padding: 20px 14px;
+            }
+
+            .results-section > .container {
+                padding: 50px 24px 58px;
+                border-radius: 22px;
+            }
+
+            .results-carousel,
+            .results-section .carousel {
+                padding-right: 48px;
+                padding-left: 48px;
+            }
+
+            .carousel-shell {
+                padding-top: 20px;
+                padding-right: 54px;
+                padding-bottom: 38px;
+                padding-left: 54px;
+            }
+
+            .carousel-shell > .results-carousel {
+                padding: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding-top: 52px;
+            }
+
+            .paper-nav {
+                min-height: 52px;
+                padding: 0 14px;
+            }
+
+            .paper-nav-brand {
+                font-size: 0.98rem;
+            }
+
+            .paper-nav-links {
+                flex: 1 1 auto;
+                gap: 13px;
+                margin-left: 18px;
+            }
+
+            .paper-nav-links a {
+                font-size: 0.7rem;
+            }
+
+            .publication-hero > .hero-body {
+                padding: 50px 16px 46px;
+            }
+
+            .paper-kicker {
+                margin-bottom: 18px;
+                font-size: 0.61rem;
+                letter-spacing: 0.08em;
+            }
+
+            .title-mark {
+                font-size: clamp(3rem, 17vw, 4.5rem);
+            }
+
+            .title-subline {
+                margin-top: 16px;
+                font-size: clamp(1.42rem, 7vw, 2rem);
+            }
+
+            .publication-authors {
+                font-size: 0.95rem !important;
+                line-height: 1.75;
+            }
+
+            .publication-links {
+                gap: 8px;
+            }
+
+            .publication-links .button.is-dark {
+                min-width: 100px;
+            }
+
+            .tldr {
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px;
+                font-size: 0.86rem;
+            }
+
+            .abstract-shell {
+                width: calc(100% - 24px);
+                margin-top: 38px;
+                padding: 38px 18px 34px;
+                border-radius: 18px;
+            }
+
+            .abstract-shell .column {
+                width: 100%;
+                padding-right: 0;
+                padding-left: 0;
+            }
+
+            .abstract-shell .content,
+            .method-section .content {
+                font-size: 1.05rem;
+                line-height: 1.82;
+            }
+
+            .method-section {
+                padding: 0 12px;
+            }
+
+            .method-section > .hero-body {
+                padding: 18px 0;
+            }
+
+            .method-section .column.is-three-fifths {
+                padding: 38px 16px 30px;
+                border-radius: 18px;
+            }
+
+            .method-section .content > .hero-body {
+                padding: 7px;
+            }
+
+            .data-pipeline-block {
+                margin-top: 34px;
+                padding-top: 30px;
+            }
+
+            .data-pipeline-media {
+                padding: 7px;
+            }
+
+            .data-pipeline-block figcaption {
+                font-size: 1.02rem;
+                line-height: 1.75;
+            }
+
+            .results-section {
+                padding: 11px 8px;
+            }
+
+            .results-section > .container {
+                padding: 38px 10px 46px;
+                border-radius: 17px;
+            }
+
+            .section-title {
+                padding-right: 10px;
+                padding-left: 10px;
+            }
+
+            .section-title + .content {
+                padding-right: 10px;
+                padding-left: 10px;
+                font-size: 1.02rem;
+                line-height: 1.75;
+            }
+
+            .sub-section-label {
+                margin-top: 36px !important;
+                border-radius: 11px;
+                font-size: 0.9rem !important;
+                text-align: center;
+            }
+
+            .results-carousel,
+            .results-section .carousel {
+                padding: 14px 36px 30px;
+                border-radius: 13px;
+            }
+
+            .carousel-shell {
+                padding-top: 14px;
+                padding-right: 35px;
+                padding-bottom: 30px;
+                padding-left: 35px;
+                border-radius: 13px;
+            }
+
+            .carousel-shell > .results-carousel {
+                padding: 0;
+            }
+
+            .video-comparison {
+                width: 100% !important;
+            }
+
+            .carousel-cell {
+                padding-right: 2px;
+                padding-left: 2px;
+            }
+
+            .edge-map-hint {
+                display: flex;
+                width: calc(100% - 20px);
+                padding: 7px 9px;
+                font-size: 0.78rem;
+            }
+
+            .subvideo-label-row {
+                gap: 4px;
+                padding: 0;
+            }
+
+            .subvideo-tag {
+                flex-direction: column;
+                gap: 3px;
+                min-height: 38px;
+                padding: 5px 6px;
+                font-size: 0.68rem;
+            }
+
+            .subvideo-tag::before {
+                font-size: 0.54rem;
+            }
+
+            .comparison-controls {
+                opacity: 1;
+            }
+
+            .comparison-time {
+                display: none;
+            }
+
+            .slider-navigation-previous,
+            .slider-navigation-next {
+                width: 30px;
+                height: 30px;
+                margin-top: -15px;
+            }
+
+            .slider-navigation-previous {
+                left: 3px;
+            }
+
+            .slider-navigation-next {
+                right: 3px;
+                left: auto;
+            }
+
+            .paper-footer {
+                margin-top: 22px;
+                padding: 34px 18px;
+            }
+        }
+    </style>
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LKCDBW8851"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-LKCDBW8851');
+</script>
+
+
+<body>
+
+
+    <nav class="paper-nav" aria-label="Project page navigation">
+        <a class="paper-nav-brand" href="#home">RealWeather</a>
+        <div class="paper-nav-links">
+            <a href="#single-weather">Single Weather</a>
+            <a href="#strength-control">Strength Control</a>
+            <a href="#mixed-weather">Mixed Weather</a>
+            <a href="#weather-removal">Weather Removal</a>
+            <a href="#ood">OOD Evaluation</a>
+            <a href="#method">Method</a>
+        </div>
+    </nav>
+
+    <!-- ==================== TITLE ==================== -->
+    <section id="home" class="hero teaser publication-hero">
+        <div class="hero-body">
+            <div class="container is-max-desktop has-text-centered">
+                <div class="columns is-centered">
+                    <div class="column has-text-centered">
+                        <!-- <div class="paper-kicker">Real-world weather translation · Driving world models</div> -->
+                        <h1 class="title is-1 publication-title has-text-centered">
+                            <span class="title-mark">RealWeather</span>
+                            <span class="title-subline"><span class="title-emphasis title-realistic">Realistic</span> and <span class="title-emphasis title-faithful">Scene-Faithful</span> Weather Translation with Driving World Models</span>
+                        </h1>
+
+                        
+                        <br>
+                        <div class="column has-text-centered">
+                            <div class="publication-links">
+                                <span class="link-block">
+                                    <a href="https://arxiv.org" target="_blank" rel="noopener noreferrer"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="ai ai-arxiv"></i>
+                                        </span>
+                                        <span>arXiv</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fab fa-github"></i>
+                                        </span>
+                                        <span>Code</span>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="tldr">
+                            <strong>TL;DR</strong>
+                            <span>A driving world model for <b>realistic</b> and <b>scene-faithful</b> weather
+                                translation in driving videos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ABSTRACT ==================== -->
+    <!-- <div id="abstract" class="container is-max-desktop abstract-shell">
+        <div class="columns is-centered has-text-centered">
+            <div class="column is-four-fifths">
+                <h2 class="title is-3 section-heading" data-kicker="Research summary">Abstract</h2>
+                <div class="content has-text-justified">
+                    Realistic weather translation is valuable for developing and evaluating autonomous driving systems.
+                    However, paired videos of the same scene under different weather conditions are nearly impossible to collect in the real world.
+                    Existing methods therefore rely on simulated weather data, 3D weather editing, or geometry-conditioned generation. These methods often suffer from limited realism due to synthetic or handcrafted weather effects, and weak scene fidelity because geometry-only controls lack appearance details.
+                    To achieve both realistic and scene-faithful weather translation, we propose <b>RealWeather</b>, a world model for weather translation in driving videos.
+                    RealWeather learns directly from real-world driving videos through <i>Progressive Real-World Bootstrapping</i>, which progressively improves the realism of training inputs while always using real videos as supervision targets. This design enables the model to learn realistic weather effects from real data, adapt to real-style video inputs, and support clear ↔ adverse bidirectional translation.
+                    To further improve scene fidelity and suppress hallucinations, we optimize RealWeather with R1-style reinforcement learning guided by scene-consistency rewards.
+                    Experiments show that RealWeather generates realistic and scene-faithful weather transformations in driving videos, outperforming existing methods in visual realism, scene fidelity, and consistency with real-world weather conditions.
+                </div>
+            </div>
+        </div>
+    </div>
+    <br> -->
+
+
+    <!-- ============================================================ -->
+    <!-- 1. TEASER – 雨天、雪天、雾天三种单独天气                          -->
+    <!-- ============================================================ -->
+    <section id="single-weather" class="section results-section">
+        <div class="container is-max-widescreen">
+            <h2 class="title is-3 section-title" data-kicker="01 · Core results" style="text-align: center">Single Weather Translation</h2>
+            <p class="content" style="text-align: center; margin-bottom: 25px;">
+                RealWeather supports translating clear-weather driving videos into rainy, snowy, and foggy conditions
+                while faithfully preserving the original scene structure and dynamics.
+            </p>
+
+            <div class="columns is-centered">
+                <div class="column is-10">
+                    <div id="teaser-carousel" class="carousel results-carousel">
+                        <div class="carousel-cell">
+                            <video muted loop="loop" width="80%" preload="metadata" controls>
+                                <source src="./video/teaser/case0.mp4" type="video/mp4">
+                            </video>
+                            <br>
+                        </div>
+                        <div class="carousel-cell">
+                            <video muted loop="loop" width="80%" preload="metadata" controls>
+                                <source src="./video/teaser/case1.mp4" type="video/mp4">
+                            </video>
+                            <br>
+                        </div>
+                        <div class="carousel-cell">
+                            <video muted loop="loop" width="80%" preload="metadata" controls>
+                                <source src="./video/teaser/case4.mp4" type="video/mp4">
+                            </video>
+                            <br>
+                        </div>
+                        <div class="carousel-cell">
+                            <video muted loop="loop" width="80%" preload="metadata" controls>
+                                <source src="./video/teaser/case5.mp4" type="video/mp4">
+                            </video>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- <hr class="section-divider"> -->
+
+    <!-- ============================================================ -->
+    <!-- 2. WEATHER STRENGTH CONTROL                                   -->
+    <!-- ============================================================ -->
+    <section id="strength-control" class="section results-section">
+        <div class="container is-max-widescreen">
+            <h2 class="title is-3 section-title" data-kicker="02 · Controllability" style="text-align: center">Weather Strength Control</h2>
+            <p class="content" style="text-align: center; margin-bottom: 25px;">
+                RealWeather enables continuous control over the intensity of each weather effect,
+                ranging from light to extreme conditions.
+            </p>
+
+            <!-- Fog -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🌫 Fog Strength Control</h3>
+            <div id="fog-control-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/fog/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/fog/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/fog/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/fog/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/fog/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Rain -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🌧 Rain Strength Control</h3>
+            <div id="rain-control-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/rain/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/rain/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/rain/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/rain/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Snow -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">❄️ Snowflake Strength Control</h3>
+            <div id="snow-control-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/snowflake/case7.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/snowflake/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/snowflake/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/snowflake/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/snowflake/case6.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ============================================================ -->
+    <!-- 3. MIXED WEATHER – 雪+雨，雪+雾，雨+雾                         -->
+    <!-- ============================================================ -->
+    <section id="mixed-weather" class="section results-section">
+        <div class="container is-max-widescreen">
+            <h2 class="title is-3 section-title" data-kicker="03 · Composition" style="text-align: center">Mixed Weather Conditions</h2>
+            <p class="content" style="text-align: center; margin-bottom: 25px;">
+                RealWeather can combine multiple weather effects simultaneously, enabling complex real-world
+                scenarios such as rain with fog, or snow with rain.
+            </p>
+
+            <!-- Rain + Snow -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">☀️ Sunny (input) → 🌧 + ❄️ Rain & Snowflake</h3>
+            <div id="rain-snow-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_snow/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_snow/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_snow/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_snow/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_snow/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Snow + Fog -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">☀️ Sunny (input) → ❄️ + 🌫 Snowflake & Fog</h3>
+            <div id="snow-fog-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/snow_fog/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/snow_fog/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/snow_fog/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/snow_fog/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/snow_fog/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Rain + Fog -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">☀️ Sunny (input) → 🌧 + 🌫 Rain & Fog</h3>
+            <div id="rain-fog-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_fog/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_fog/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_fog/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <!-- <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_fog/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div> -->
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="70%" preload="metadata" controls>
+                        <source src="./video/controllable/multiweather/rain_fog/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ============================================================ -->
+    <!-- 4. WEATHER REMOVAL                                            -->
+    <!-- ============================================================ -->
+    <section id="weather-removal" class="section results-section">
+        <div class="container is-max-widescreen">
+            <h2 class="title is-3 section-title" data-kicker="04 · Bidirectional editing" style="text-align: center">Weather Removal</h2>
+            <p class="content" style="text-align: center; margin-bottom: 25px;">
+                RealWeather supports bidirectional translation — it can also remove adverse weather effects
+                from driving videos, restoring clear-weather visibility.
+            </p>
+
+            <!-- Fog Removal -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🌫 → ☀️ Fog Removal</h3>
+            <div id="fog-removal-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/fog/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/fog/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/fog/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/fog/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/fog/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Rain Removal -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🌧 → ☀️ Rain Removal</h3>
+            <div id="rain-removal-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/rain/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/rain/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/rain/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/rain/case4.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/rain/case5.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Snow Removal -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">❄️ → ☀️ Snow Removal</h3>
+            <div id="snow-removal-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/snow/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/snow/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/snow/case7.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/snow/case8.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/removal/snow/case9.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ============================================================ -->
+    <!-- 5. OOD SCENARIOS                                              -->
+    <!-- ============================================================ -->
+    <section id="ood" class="section results-section">
+        <div class="container is-max-widescreen">
+            <h2 class="title is-3 section-title" data-kicker="05 · Generalization" style="text-align: center">Out-of-Distribution (OOD) Scenarios</h2>
+            <p class="content" style="text-align: center; margin-bottom: 25px;">
+                RealWeather generalizes to out-of-distribution scenarios never seen during training,
+                including simulation inputs, day-to-night transitions, and fisheye camera views.
+            </p>
+
+            <!-- Simulation Inputs -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🖥 Simulation Inputs</h3>
+            <div class="columns is-centered">
+                <!-- <div class="column is-6"> -->
+                    <div style="text-align: center;" class="carousel">
+                        <video muted loop="loop" width="80%" preload="metadata" controls>
+                            <source src="./video/ood/engine_case/case1.mp4" type="video/mp4">
+                        </video>
+                        <br>
+                    </div>
+                <!-- </div> -->
+            </div>
+            <br>
+
+            <!-- Day-to-Night -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">🌤 → 🌙 Day-to-Night Translation</h3>
+            <div class="columns is-centered">
+                <!-- <div class="column is-6"> -->
+                    <div style="text-align: center;" class="carousel">
+                        <video muted loop="loop" width="80%" preload="metadata" controls>
+                            <source src="./video/ood/daytonight/case1.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                <!-- </div> -->
+            </div>
+            <br>
+
+            <!-- Fisheye Camera -->
+            <h3 class="title is-5 sub-section-label" style="text-align: center">📷 Fisheye Camera</h3>
+            <div id="fisheye-carousel" class="carousel results-carousel">
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/ood/fisheye/case1.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/ood/fisheye/case2.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+                <div class="carousel-cell">
+                    <video muted loop="loop" width="80%" preload="metadata" controls>
+                        <source src="./video/ood/fisheye/case3.mp4" type="video/mp4">
+                    </video>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== METHOD ==================== -->
+    <section id="method" class="hero teaser method-section">
+        <div class="hero-body">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-three-fifths" style="margin-top: 30px; margin-bottom: 20px;">
+                    <h2 class="title is-3 section-heading" data-kicker="Approach">Method</h2>
+                    <div class="content has-text-justified">
+                        <div class="hero-body" style="margin-top: 40px; margin-bottom: -30px; border-radius: 6px">
+                            <img id="overview" width="100%" src="./image/pipeline.png" alt="Overview of the RealWeather method" />
+                        </div>
+                        <p>
+                            Overview of <b>RealWeather</b>.
+                            (A) <i>Progressive Realism Bootstrapping</i> enables the model to learn weather effects directly from real-world videos, progressively adapt to real-style inputs, and support bidirectional weather editing.
+                            (B) <i>Scene-Fidelity RL Optimization</i> further improves structural fidelity with segmentation-based rewards, reducing hallucinations while preserving the learned weather translation capability.
+                        </p>
+                    </div>
+                    <br>
+
+                    <h2 class="title is-3 section-heading">Data-Pipeline</h2>
+                    <div class="content has-text-justified">
+                        <div class="hero-body" style="margin-top: 40px; margin-bottom: -30px; border-radius: 6px">
+                            <img src="./image/data-pipeline.png" alt="RealWeather data construction pipeline" loading="lazy" onerror="this.closest('.data-pipeline-block').hidden = true" />
+                        </div>
+                        <p>
+                            Overview of the <b>Pseudo-Clear Generation</b> pipeline of <b>RealWeather</b>.
+                            <i>Adverse-Weather Preprocessing</i> removes transient precipitation artifacts using established adverse-weather removal models.
+                            <i>Clear-Control Extraction</i> constructs a clear-weather anchor frame and weather-agnostic geometric controls.
+                            Finally, <i>Conditional Generation</i> leverages a state-of-the-art driving world model to propagate the clear-weather appearance from the anchor frame throughout the video, producing a scene-consistent pseudo-clear counterpart.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <br>
+
+
+    <!-- ============================================================ -->
+    <!-- 6. CAROUSEL INITIALIZATION SCRIPT                             -->
+    <!-- ============================================================ -->
+    <script>
+        (function initializeVideoComparisons() {
+            var visibilityHandlers = new WeakMap();
+            var visibilityObserver = 'IntersectionObserver' in window
+                ? new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        var handleVisibility = visibilityHandlers.get(entry.target);
+                        if (handleVisibility) {
+                            handleVisibility(entry.isIntersecting && entry.intersectionRatio > 0);
+                        }
+                    });
+                }, { threshold: [0, 0.01] })
+                : null;
+
+            function edgePath(sourcePath) {
+                return sourcePath.replace(/(^|\/)video\//, '$1edges/');
+            }
+
+            function formatTime(seconds) {
+                if (!Number.isFinite(seconds)) {
+                    return '0:00';
+                }
+                var minutes = Math.floor(seconds / 60);
+                var remainingSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return minutes + ':' + remainingSeconds;
+            }
+
+            function createButton(label, text) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.setAttribute('aria-label', label);
+                button.textContent = text;
+                return button;
+            }
+
+            function createEdgeMapHint(isPlaceholder) {
+                var hint = document.createElement('p');
+                hint.className = 'edge-map-hint';
+                hint.textContent = "Drag the divider to overlay the input video's edge map on each generated video.";
+                if (isPlaceholder) {
+                    hint.classList.add('is-placeholder');
+                    hint.setAttribute('aria-hidden', 'true');
+                }
+                return hint;
+            }
+
+            function subvideoLabel(name, role) {
+                return { name: name, role: role || 'generated' };
+            }
+
+            function getSubvideoLayout(sourcePath) {
+                if (sourcePath.indexOf('/teaser/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Foggy')],
+                        bottom: [subvideoLabel('Rainy'), subvideoLabel('Snowy')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/controllable/fog/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Light Fog')],
+                        bottom: [subvideoLabel('Moderate Fog'), subvideoLabel('Heavy Fog')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/controllable/rain/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Light Rain')],
+                        bottom: [subvideoLabel('Moderate Rain'), subvideoLabel('Heavy Rain')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/controllable/snowflake/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Light Snow')],
+                        bottom: [subvideoLabel('Moderate Snow'), subvideoLabel('Heavy Snow')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/multiweather/rain_snow/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Rain + Snow')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/multiweather/snow_fog/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Snow + Fog')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/multiweather/rain_fog/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Sunny', 'input'), subvideoLabel('Rain + Fog')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/removal/fog/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Foggy', 'input'), subvideoLabel('Sunny')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/removal/rain/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Rainy', 'input'), subvideoLabel('Sunny')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/removal/snow/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Snowy', 'input'), subvideoLabel('Sunny')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/ood/daytonight/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Day', 'input'), subvideoLabel('Night')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/ood/fisheye/') !== -1) {
+                    return {
+                        top: [subvideoLabel('Rainy Fisheye', 'input'), subvideoLabel('Sunny')]
+                    };
+                }
+
+                if (sourcePath.indexOf('/ood/engine_case/') !== -1) {
+                    return {
+                        top: [
+                            subvideoLabel('Simulator', 'input'),
+                            subvideoLabel('Light Rain + Heavy Puddle'),
+                            subvideoLabel('Light Snow + Heavy Accumulation')
+                        ],
+                        bottom: [
+                            subvideoLabel('Foggy'),
+                            subvideoLabel('Heavy Rain + Light Puddle'),
+                            subvideoLabel('Heavy Snow + Light Accumulation')
+                        ]
+                    };
+                }
+
+                return null;
+            }
+
+            function createSubvideoLabelRow(labels, position) {
+                if (!labels || !labels.length) {
+                    return null;
+                }
+
+                var row = document.createElement('div');
+                row.className = 'subvideo-label-row is-' + position;
+                row.style.setProperty('--subvideo-columns', String(labels.length));
+
+                labels.forEach(function (label) {
+                    var tag = document.createElement('span');
+                    tag.className = 'subvideo-tag is-' + label.role;
+                    tag.setAttribute('data-role', label.role === 'input' ? 'Input' : 'Generated');
+                    tag.textContent = label.name;
+                    row.appendChild(tag);
+                });
+
+                return row;
+            }
+
+            function enablePlainVideoAutoplay(video) {
+                if (!video.isConnected || visibilityHandlers.has(video)) {
+                    return;
+                }
+
+                var placeholder = createEdgeMapHint(true);
+                var topLabelRow = video.previousElementSibling;
+                var placeholderAnchor = topLabelRow && topLabelRow.classList.contains('subvideo-label-row')
+                    && topLabelRow.classList.contains('is-top')
+                    ? topLabelRow
+                    : video;
+                video.parentNode.insertBefore(placeholder, placeholderAnchor);
+
+                video.muted = true;
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+
+                function handleVisibility(isVisible) {
+                    if (isVisible) {
+                        video.play().catch(function () {});
+                    } else {
+                        video.pause();
+                    }
+                }
+
+                visibilityHandlers.set(video, handleVisibility);
+                if (visibilityObserver) {
+                    visibilityObserver.observe(video);
+                } else {
+                    handleVisibility(true);
+                }
+            }
+
+            function createComparison(video) {
+                var source = video.querySelector('source');
+                var sourcePath = source ? source.getAttribute('src') : video.getAttribute('src');
+                if (!sourcePath) {
+                    return;
+                }
+
+                var videoParent = video.parentNode;
+                var subvideoLayout = getSubvideoLayout(sourcePath);
+                var topLabelRow = subvideoLayout
+                    ? createSubvideoLabelRow(subvideoLayout.top, 'top')
+                    : null;
+                var bottomLabelRow = subvideoLayout
+                    ? createSubvideoLabelRow(subvideoLayout.bottom, 'bottom')
+                    : null;
+
+                if (topLabelRow) {
+                    videoParent.insertBefore(topLabelRow, video);
+                }
+                if (bottomLabelRow) {
+                    videoParent.insertBefore(bottomLabelRow, video.nextSibling);
+                }
+
+                var edgeVideo = video.cloneNode(true);
+                edgeVideo.className = 'comparison-edge-video';
+                edgeVideo.removeAttribute('width');
+                edgeVideo.removeAttribute('height');
+                edgeVideo.removeAttribute('controls');
+                edgeVideo.removeAttribute('autoplay');
+                edgeVideo.setAttribute('playsinline', '');
+                edgeVideo.autoplay = false;
+                edgeVideo.preload = 'metadata';
+                edgeVideo.muted = true;
+                edgeVideo.setAttribute('muted', '');
+
+                var edgeSources = edgeVideo.querySelectorAll('source');
+                edgeSources.forEach(function (edgeSource) {
+                    var edgeSourcePath = edgeSource.getAttribute('src');
+                    if (edgeSourcePath) {
+                        edgeSource.setAttribute('src', edgePath(edgeSourcePath));
+                    }
+                });
+                if (!edgeSources.length && edgeVideo.getAttribute('src')) {
+                    edgeVideo.setAttribute('src', edgePath(edgeVideo.getAttribute('src')));
+                }
+
+                edgeVideo.addEventListener('loadedmetadata', function () {
+                    if (video.isConnected) {
+                        initializeComparison(video, edgeVideo, sourcePath);
+                    }
+                }, { once: true });
+                edgeVideo.addEventListener('error', function () {
+                    enablePlainVideoAutoplay(video);
+                }, { once: true });
+                if (edgeSources.length) {
+                    var failedEdgeSources = 0;
+                    edgeSources.forEach(function (edgeSource) {
+                        edgeSource.addEventListener('error', function () {
+                            failedEdgeSources += 1;
+                            if (failedEdgeSources === edgeSources.length) {
+                                enablePlainVideoAutoplay(video);
+                            }
+                        }, { once: true });
+                    });
+                }
+                edgeVideo.load();
+            }
+
+            function initializeComparison(video, edgeVideo, sourcePath) {
+                if (visibilityObserver) {
+                    visibilityObserver.unobserve(video);
+                }
+                visibilityHandlers.delete(video);
+
+                var wrapper = document.createElement('div');
+                wrapper.className = 'video-comparison';
+                wrapper.setAttribute('data-source', sourcePath);
+                wrapper.style.width = video.getAttribute('width') || '100%';
+
+                var hint = createEdgeMapHint(false);
+
+                var baseVideo = video.cloneNode(true);
+                baseVideo.className = 'comparison-base-video';
+                baseVideo.removeAttribute('width');
+                baseVideo.removeAttribute('height');
+                baseVideo.removeAttribute('controls');
+                baseVideo.removeAttribute('autoplay');
+                baseVideo.setAttribute('playsinline', '');
+                baseVideo.autoplay = false;
+                baseVideo.muted = true;
+                baseVideo.preload = 'metadata';
+                baseVideo.setAttribute('muted', '');
+
+                var divider = document.createElement('div');
+                divider.className = 'comparison-divider';
+                divider.setAttribute('role', 'slider');
+                divider.setAttribute('tabindex', '0');
+                divider.setAttribute('aria-label', 'Adjust edge overlay coverage');
+                divider.setAttribute('aria-valuemin', '0');
+                divider.setAttribute('aria-valuemax', '100');
+                divider.setAttribute('aria-valuenow', '75');
+                divider.style.left = '75%';
+
+                var controls = document.createElement('div');
+                controls.className = 'comparison-controls';
+
+                var playButton = createButton('Play video', '▶');
+                var progress = document.createElement('input');
+                progress.className = 'comparison-progress';
+                progress.type = 'range';
+                progress.min = '0';
+                progress.max = '0';
+                progress.step = 'any';
+                progress.value = '0';
+                progress.setAttribute('aria-label', 'Video progress');
+
+                var timeLabel = document.createElement('span');
+                timeLabel.className = 'comparison-time';
+                timeLabel.textContent = '0:00 / 0:00';
+
+                var muteButton = createButton('Unmute video', '🔇');
+                var fullscreenButton = createButton('Enter fullscreen', '⛶');
+                controls.append(playButton, progress, timeLabel, muteButton, fullscreenButton);
+
+                wrapper.append(baseVideo, edgeVideo, divider, controls);
+                var videoParent = video.parentNode;
+                var topLabelRow = video.previousElementSibling;
+                var hintAnchor = topLabelRow && topLabelRow.classList.contains('subvideo-label-row')
+                    && topLabelRow.classList.contains('is-top')
+                    ? topLabelRow
+                    : video;
+                videoParent.insertBefore(hint, hintAnchor);
+                videoParent.replaceChild(wrapper, video);
+
+                var split = 75;
+                var dragging = false;
+                var isVisible = false;
+
+                function playComparison() {
+                    var basePlay = baseVideo.play();
+                    if (basePlay) {
+                        basePlay.catch(function () {});
+                    }
+
+                    setSynchronizedTime(baseVideo.currentTime);
+                    var edgePlay = edgeVideo.play();
+                    if (edgePlay) {
+                        edgePlay.catch(function () {});
+                    }
+                }
+
+                function pauseComparison() {
+                    baseVideo.pause();
+                    edgeVideo.pause();
+                }
+
+                function handleVisibility(isInViewport) {
+                    if (isVisible === isInViewport) {
+                        return;
+                    }
+
+                    isVisible = isInViewport;
+                    if (isVisible) {
+                        playComparison();
+                    } else {
+                        pauseComparison();
+                    }
+                }
+
+                function setSplit(nextSplit) {
+                    split = Math.max(0, Math.min(100, nextSplit));
+                    divider.style.left = split + '%';
+                    divider.setAttribute('aria-valuenow', String(Math.round(split)));
+                    edgeVideo.style.clipPath = 'inset(0 0 0 ' + split + '%)';
+                    edgeVideo.style.webkitClipPath = 'inset(0 0 0 ' + split + '%)';
+                }
+
+                function setSynchronizedTime(time) {
+                    if (!Number.isFinite(time)) {
+                        return;
+                    }
+                    try {
+                        if (Math.abs(edgeVideo.currentTime - time) > 0.06) {
+                            edgeVideo.currentTime = time;
+                        }
+                    } catch (error) {
+                        // The edge video may not have metadata yet.
+                    }
+                }
+
+                function updateControls() {
+                    playButton.textContent = baseVideo.paused ? '▶' : '❚❚';
+                    playButton.setAttribute('aria-label', baseVideo.paused ? 'Play video' : 'Pause video');
+                    muteButton.textContent = baseVideo.muted ? '🔇' : '🔊';
+                    muteButton.setAttribute('aria-label', baseVideo.muted ? 'Unmute video' : 'Mute video');
+                    fullscreenButton.setAttribute(
+                        'aria-label',
+                        document.fullscreenElement === wrapper ? 'Exit fullscreen' : 'Enter fullscreen'
+                    );
+                }
+
+                function updateProgress() {
+                    if (Number.isFinite(baseVideo.duration)) {
+                        progress.max = String(baseVideo.duration);
+                    }
+                    progress.value = String(baseVideo.currentTime || 0);
+                    timeLabel.textContent = formatTime(baseVideo.currentTime) + ' / ' + formatTime(baseVideo.duration);
+                }
+
+                function updateSplitFromPointer(event) {
+                    var bounds = wrapper.getBoundingClientRect();
+                    if (bounds.width > 0) {
+                        setSplit((event.clientX - bounds.left) / bounds.width * 100);
+                    }
+                }
+
+                divider.addEventListener('pointerdown', function (event) {
+                    event.preventDefault();
+                    dragging = true;
+                    divider.setPointerCapture(event.pointerId);
+                    updateSplitFromPointer(event);
+                });
+                divider.addEventListener('pointermove', function (event) {
+                    if (dragging) {
+                        updateSplitFromPointer(event);
+                    }
+                });
+                divider.addEventListener('pointerup', function () {
+                    dragging = false;
+                });
+                divider.addEventListener('pointercancel', function () {
+                    dragging = false;
+                });
+                divider.addEventListener('keydown', function (event) {
+                    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                        event.preventDefault();
+                        setSplit(split + (event.key === 'ArrowLeft' ? -2 : 2));
+                    }
+                });
+
+                playButton.addEventListener('click', function () {
+                    if (baseVideo.paused) {
+                        baseVideo.play().catch(function () {});
+                    } else {
+                        baseVideo.pause();
+                    }
+                });
+                muteButton.addEventListener('click', function () {
+                    baseVideo.muted = !baseVideo.muted;
+                    updateControls();
+                });
+                fullscreenButton.addEventListener('click', function () {
+                    if (document.fullscreenElement === wrapper) {
+                        document.exitFullscreen();
+                    } else if (wrapper.requestFullscreen) {
+                        wrapper.requestFullscreen();
+                    }
+                });
+                progress.addEventListener('input', function () {
+                    var nextTime = Number(progress.value);
+                    baseVideo.currentTime = nextTime;
+                    setSynchronizedTime(nextTime);
+                    updateProgress();
+                });
+
+                baseVideo.addEventListener('play', function () {
+                    edgeVideo.play().catch(function () {});
+                    updateControls();
+                });
+                edgeVideo.addEventListener('play', function () {
+                    if (baseVideo.paused) {
+                        baseVideo.play().catch(function () {});
+                    }
+                });
+                baseVideo.addEventListener('pause', function () {
+                    if (!edgeVideo.paused) {
+                        edgeVideo.pause();
+                    }
+                    updateControls();
+                });
+                edgeVideo.addEventListener('pause', function () {
+                    if (!baseVideo.paused) {
+                        baseVideo.pause();
+                    }
+                });
+                baseVideo.addEventListener('seeking', function () {
+                    setSynchronizedTime(baseVideo.currentTime);
+                });
+                baseVideo.addEventListener('timeupdate', function () {
+                    setSynchronizedTime(baseVideo.currentTime);
+                    updateProgress();
+                });
+                baseVideo.addEventListener('loadedmetadata', function () {
+                    updateProgress();
+                    setSynchronizedTime(baseVideo.currentTime);
+                    if (isVisible) {
+                        playComparison();
+                    }
+                });
+                document.addEventListener('fullscreenchange', updateControls);
+
+                setSplit(split);
+                updateControls();
+                updateProgress();
+                visibilityHandlers.set(wrapper, handleVisibility);
+                if (visibilityObserver) {
+                    visibilityObserver.observe(wrapper);
+                } else {
+                    handleVisibility(true);
+                }
+            }
+
+            window.addEventListener('load', function () {
+                window.setTimeout(function () {
+                    document.querySelectorAll('video').forEach(createComparison);
+                }, 0);
+            });
+        }());
+
+        $(window).on('load', function () {
+            // Teaser carousel
+            bulmaCarousel.attach('#teaser-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+
+            // Weather Strength Control carousels
+            bulmaCarousel.attach('#fog-control-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#rain-control-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#snow-control-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+
+            // Mixed Weather carousels
+            bulmaCarousel.attach('#rain-snow-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#snow-fog-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#rain-fog-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+
+            // Weather Removal carousels
+            bulmaCarousel.attach('#fog-removal-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#rain-removal-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+            bulmaCarousel.attach('#snow-removal-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+
+            // OOD Fisheye carousel
+            bulmaCarousel.attach('#fisheye-carousel', {
+                slidesToScroll: 1,
+                slidesToShow: 1,
+                loop: true,
+                autoplay: false,
+            });
+
+            document.querySelectorAll('.results-carousel').forEach(function (carousel) {
+                if (carousel.parentElement.classList.contains('carousel-shell')) {
+                    return;
+                }
+
+                var previousButton = carousel.querySelector('.slider-navigation-previous');
+                var nextButton = carousel.querySelector('.slider-navigation-next');
+                if (!previousButton || !nextButton) {
+                    return;
+                }
+
+                var carouselId = carousel.id;
+                var shell = document.createElement('div');
+                shell.className = 'carousel-shell';
+                if (carouselId) {
+                    carousel.id = carouselId + '-track';
+                    shell.id = carouselId;
+                }
+                carousel.classList.add('carousel-track');
+                carousel.parentNode.insertBefore(shell, carousel);
+                shell.appendChild(carousel);
+                shell.append(previousButton, nextButton);
+            });
+        });
+    </script>
+</body>
+</html>
